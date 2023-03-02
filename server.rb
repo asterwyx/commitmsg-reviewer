@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'sinatra/reloader'
 require 'octokit'
 require 'dotenv/load' # Manages environment variables
 require 'json'
@@ -43,6 +44,7 @@ class GHAapp < Sinatra::Application
   # Turn on Sinatra's verbose logging during development
   configure :development do
     set :logging, Logger::DEBUG
+    register Sinatra::Reloader
   end
 
 
@@ -58,13 +60,13 @@ class GHAapp < Sinatra::Application
 
   post '/event_handler' do
 
-    # # # # # # # # # # # #
-    # ADD YOUR CODE HERE  #
-    # # # # # # # # # # # #
-
     case request.env['HTTP_X_GITHUB_EVENT']
     when 'issues'
-      if @payload['action'] === 'opened'
+      logger.debug 'An issue was %s!' % [payload['action']]
+      case @payload['action']
+      when 'opened'
+        handle_issue_opened_event(@payload)
+      when 'reopened'
         handle_issue_opened_event(@payload)
       end
     end
@@ -77,14 +79,12 @@ class GHAapp < Sinatra::Application
 
   helpers do
 
-    # # # # # # # # # # # # # # # # #
-    # ADD YOUR HELPER METHODS HERE  #
-    # # # # # # # # # # # # # # # # #
-
     def handle_issue_opened_event(payload)
-      logger.debug 'An issue was opened!'
-      logger.debug payload
+      repo = payload['repository']['full_name']
+      issue_number = payload['issue']['number']
+      @installation_client.add_labels_to_an_issue(repo, issue_number, ['needs-response'])
     end
+
     # Saves the raw payload and converts the payload to JSON format
     def get_payload_request(request)
       # request.body is an IO or StringIO object
