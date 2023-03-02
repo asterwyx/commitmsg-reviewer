@@ -62,6 +62,12 @@ class GHAapp < Sinatra::Application
     # ADD YOUR CODE HERE  #
     # # # # # # # # # # # #
 
+    case request.env['HTTP_X_GITHUB_EVENT']
+    when 'issues'
+      if @payload['action'] === 'opened'
+        handle_issue_opened_event(@payload)
+      end
+    end
     200 # success status
   end
 
@@ -75,6 +81,10 @@ class GHAapp < Sinatra::Application
     # ADD YOUR HELPER METHODS HERE  #
     # # # # # # # # # # # # # # # # #
 
+    def handle_issue_opened_event(payload)
+      logger.debug 'An issue was opened!'
+      logger.debug payload
+    end
     # Saves the raw payload and converts the payload to JSON format
     def get_payload_request(request)
       # request.body is an IO or StringIO object
@@ -100,7 +110,7 @@ class GHAapp < Sinatra::Application
           iat: Time.now.to_i,
 
           # JWT expiration time (10 minute maximum)
-          exp: Time.now.to_i + (10 * 60),
+          exp: Time.now.to_i + (9 * 60),
 
           # Your GitHub App's identifier number
           iss: APP_IDENTIFIER
