@@ -65,6 +65,9 @@ class GHAapp < Sinatra::Application
     200 # success status
   end
 
+  get '/' do
+    "Hello World"
+  end
 
   helpers do
 
