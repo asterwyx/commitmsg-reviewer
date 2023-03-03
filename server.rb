@@ -29,7 +29,7 @@ set :bind, '0.0.0.0'
 # Have fun!
 #
 
-class GHAapp < Sinatra::Application
+class GHApp < Sinatra::Application
 
   # Expects that the private key in PEM format. Converts the newlines
   PRIVATE_KEY = OpenSSL::PKey::RSA.new(ENV['GITHUB_PRIVATE_KEY'].gsub('\n', "\n"))
@@ -68,7 +68,13 @@ class GHAapp < Sinatra::Application
         handle_issue_opened_event(@payload)
       when 'reopened'
         handle_issue_opened_event(@payload)
+      else
+        # type code here
+        logger.debug 'Unknown issue action %s.' % [@payload['action']]
       end
+    else
+      # type code here
+      logger.debug 'Unknown request'
     end
     200 # success status
   end
