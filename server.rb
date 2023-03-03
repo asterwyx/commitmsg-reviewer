@@ -59,7 +59,13 @@ class GHApp < Sinatra::Application
 
 
   post '/event_handler' do
-
+    # What we will do next
+    # 1. Judge whether a issue is a pull request.
+    # 2. If we have a event from a pull request, handle action like commits and force commits.
+    # 3. Fetch all files in one commit and its COMMIT_MSG.
+    # 4. Add COMMIT_MSG to commit files and submit it to this pull request so we can review COMMIT_MSG like a common file.
+    # NOTICE:
+    # If we can treat COMMIT_MSG like a common file. Full diff and comments are supported naturally.
     case request.env['HTTP_X_GITHUB_EVENT']
     when 'issues'
       logger.debug 'An issue was %s!' % [payload['action']]
