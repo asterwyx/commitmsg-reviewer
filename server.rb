@@ -68,7 +68,6 @@ class GHApp < Sinatra::Application
     # If we can treat COMMIT_MSG like a common file. Full diff and comments are supported naturally.
     case request.env['HTTP_X_GITHUB_EVENT']
     when 'issues'
-      logger.debug 'An issue was %s!' % [payload['action']]
       case @payload['action']
       when 'opened'
         handle_issue_opened_event(@payload)
@@ -76,11 +75,11 @@ class GHApp < Sinatra::Application
         handle_issue_opened_event(@payload)
       else
         # type code here
-        logger.debug 'Unknown issue action %s.' % [@payload['action']]
       end
+    when 'pull_request'
+      handle_pull_request(@payload)
     else
       # type code here
-      logger.debug 'Unknown request'
     end
     200 # success status
   end
@@ -90,7 +89,22 @@ class GHApp < Sinatra::Application
   end
 
   helpers do
-
+    def handle_pull_request(payload)
+      # code here
+      repo = payload['repository']['full_name']
+      pull_request_number = payload['pull_request']['number']
+      # Get commits for this pull request
+      commits = @installation_client.pull_commits(repo, pull_request_number)
+      commits.each { |commit|
+        commit_sha = commit['sha']
+        # Get COMMIT_MSG
+        puts "COMMIT_MSG: #{commit['commit']['message']}"
+        # Get file list for each commit
+        full_commit_info = @installation_client.git_commit(repo, commit_sha)
+        puts full_commit_info.inspect
+        # Add COMMIT_MSG to pull request review files
+      }
+    end
     def handle_issue_opened_event(payload)
       repo = payload['repository']['full_name']
       issue_number = payload['issue']['number']
